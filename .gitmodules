@@ -1,0 +1,4 @@
+[submodule "mmdetection"]
+    path = mmdetection
+    url = https://github.com/nnistelrooij/mmdetection
+    branch = add-multilabel-mask-dino 
