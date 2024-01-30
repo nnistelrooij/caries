@@ -1,21 +1,17 @@
-_base_ = '../../mmdetection/configs/swin/mask-rcnn_swin-t-p4-w7_fpn_ms-crop-3x_coco.py'
+_base_ = '../mmdetection/configs/swin/mask-rcnn_swin-t-p4-w7_fpn_ms-crop-3x_coco.py'
 
 custom_imports = dict(
-    imports=[
-        'caries.data',
-        'caries.evaluation.metrics',
-    ],
+    imports=['caries.evaluation.metrics', 'caries.det_tta'],
     allow_failed_imports=False,
 )
 
-data_root = '/home/mkaailab/.darwin/datasets/mucoaid/secondary-cariesv2/'
-split = 'eduardo_'
-fold = 0
+data_root = './'
 data_prefix = dict(img=data_root + 'images')
-work_dir = f'work_dirs/fold{fold}_mask-rcnn/'
+
+split = 0
+work_dir = f'work_dirs/split{split}/'
 
 classes = ['Primary Caries', 'Secondary Caries']
-attributes = ['A', 'B', 'C']
 filter_empty = False
 
 train_pipeline = [
@@ -60,15 +56,15 @@ train_pipeline = [
 ]
 
 train_dataloader = dict(dataset=dict(
-    _delete_=True, 
-    type='CariesDataset',
+    _delete_=True,
+    type='CocoDataset',
     filter_cfg=dict(filter_empty_gt=filter_empty),
     serialize_data=False,
     pipeline=train_pipeline,
-    ann_file=data_root + f'{split}train{fold}.json',
+    ann_file=f'splits/train{split}.json',
     data_prefix=data_prefix,
     data_root=data_root,
-    metainfo=dict(classes=classes, attributes=attributes),
+    metainfo=dict(classes=classes),
 ))
 
 val_pipeline=[
@@ -87,26 +83,24 @@ val_pipeline=[
 ]
 
 val_dataloader = dict(dataset=dict(
-    type='CariesDataset',
-    ann_file=data_root + f'{split}val{fold}.json',
+    ann_file=f'splits/val{split}.json',
     data_prefix=data_prefix,
     data_root=data_root,
-    metainfo=dict(classes=classes, attributes=attributes),
+    metainfo=dict(classes=classes),
     pipeline=val_pipeline,
 ))
 val_evaluator = dict(
     _delete_=True,
     type='CocoMetric',
-    ann_file=data_root + f'{split}val{fold}.json',
+    ann_file=f'splits/val{split}.json',
     metric=['bbox', 'segm'],
 )
 
 test_dataloader = dict(dataset=dict(
-    type='CariesDataset',
-    ann_file=data_root + f'{split}val0.json',
+    ann_file=f'splits/test{split}.json',
     data_prefix=data_prefix,
     data_root=data_root,
-    metainfo=dict(classes=classes, attributes=attributes),
+    metainfo=dict(classes=classes),
     pipeline=val_pipeline,
 ))
 test_evaluator = dict(
@@ -122,6 +116,7 @@ model = dict(
     ),
     test_cfg=dict(rcnn=dict(score_thr=0.0)),
 )
+load_from = 'checkpoints/mask-rcnn_swin-t.pth'
 
 max_epochs = 36
 train_cfg = dict(
@@ -141,6 +136,13 @@ param_scheduler = [
     )
 ]
 
+optim_wrapper = dict(optimizer=dict(
+    _delete_=True,
+    type='AdamW',
+    lr=0.00005,
+    betas=(0.9, 0.999),
+    weight_decay=0.1,
+))
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
@@ -198,20 +200,9 @@ tta_pipeline = [
 ]
 
 tta_model = dict(
-    type='DENTEXTTAModel',
-    flip_labels=False,
+    type='InstSegTTAModel',
     tta_cfg=dict(
         nms=dict(type='nms', iou_threshold=0.5),
         max_per_img=100,
     ),
 )
-
-load_from = 'checkpoints/mask-rcnn_swin-t.pth'
-
-optim_wrapper = dict(optimizer=dict(
-    _delete_=True,
-    type='AdamW',
-    lr=0.00005,
-    betas=(0.9, 0.999),
-    weight_decay=0.1,
-))

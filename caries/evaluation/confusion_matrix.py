@@ -185,35 +185,38 @@ def draw_confusion_matrix(
         label.set_rotation_mode('anchor')
 
 
-labels = ['Primary Caries', 'Secondary Caries', 'No caries']
-metrics = {}
-cm = np.zeros((3, 3), dtype=int)
-for fold in range(10):
+if __name__ == '__main__':
+    labels = ['Primary Caries', 'Secondary Caries', 'No caries']
+    n_splits = 10
 
-    with open(f'work_dirs/fold{fold}_mask-rcnn_swin-t/detections.pkl', 'rb') as f:
-        results = pickle.load(f)
+    cm = np.zeros((3, 3), dtype=int)
+    metrics = {}
+    for split in range(n_splits):
 
-    single_cm = determine_optimal_cm(results, use_masks=True)
-    cm += single_cm
-    for key, value in compute_metrics(single_cm, labels[:-1]).items():
-        if key in metrics:
-            metrics[key].append(value)
-            continue
+        with open(f'work_dirs/split{split}/detections.pkl', 'rb') as f:
+            results = pickle.load(f)
 
-        metrics[key] = [value]
+        single_cm = determine_optimal_cm(results, use_masks=True)
+        cm += single_cm
+        for key, value in compute_metrics(single_cm, labels[:-1]).items():
+            if key in metrics:
+                metrics[key].append(value)
+                continue
 
-print('macro-average+-std')
-for key, values in metrics.items():
-    m, s = np.mean(values), np.std(values)
-    print(f'{key}:{m:.5f}+-{s:.5f}')
+            metrics[key] = [value]
 
-print('\nmicro-average')
-metrics = compute_metrics(cm, labels[:-1])
-for key, value in metrics.items():
-    print(f'{key}:{value:.5f}')
+    print('macro-average+-std')
+    for key, values in metrics.items():
+        m, s = np.mean(values), np.std(values)
+        print(f'{key}:{m:.5f}+-{s:.5f}')
 
-fig, ax = plt.subplots(1, 1)
-draw_confusion_matrix(cm, labels=labels, ax=ax, recolor=True)
+    print('\nmicro-average')
+    metrics = compute_metrics(cm, labels[:-1])
+    for key, value in metrics.items():
+        print(f'{key}:{value:.5f}')
 
-plt.savefig(f'cm.png', dpi=500, bbox_inches='tight', pad_inches=0.0)
-plt.show()
+    fig, ax = plt.subplots(1, 1)
+    draw_confusion_matrix(cm, labels=labels, ax=ax, recolor=True)
+
+    plt.savefig(f'cm.png', dpi=500, bbox_inches='tight', pad_inches=0.0)
+    plt.show()

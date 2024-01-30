@@ -5,21 +5,21 @@ This is the code repository accompanying the paper *"Eduardo Chaves et al, 2024.
 
 ## Installation
 
-Please refer to `setup.sh` for the installation of a virtual environment and packages.
+Please refer to `setup.sh` for the installation of a virtual environment and the necessary packages.
 
 
 ## Reproduction
 
 ### Pre-processing
 
-With the bitewing radiographs and annotations as supplied on OSF, splits for 10-fold cross-validation can be made by running `caries/data/split_bitewings.py`.
+With the bitewing radiographs and annotations as supplied on OSF, splits for 10-fold cross-validation can be made by running `caries/split_bitewings.py`.
 
 ### Training
 
-Specify the cross-validation split you would like to train with in `caries/config.py` and run the following in the terminal:
+Specify the cross-validation split you would like to train within `caries/config.py` and run the following in the terminal:
 
 ``` shell
-PYTHONPATH=. python mmdetection/tools/train.py caries/config.py
+PYTHONPATH=code python code/mmdetection/tools/train.py code/caries/config.py
 ```
 
 While training is running, several metrics are logged to TensorBoard in the working directory specified by `work_dir` in the configuration file.
@@ -29,12 +29,14 @@ While training is running, several metrics are logged to TensorBoard in the work
 Choose the latest or best checkpoint from the working directory and run the following to save the annotations and predictions to a pickle file in the working directory.
 
 ```shell
-PYTHONPATH=. python mmdetection/tools/train.py caries/config.py <checkpoint>.pth
+PYTHONPATH=code python code/mmdetection/tools/test.py code/caries/config.py <work_dir>/<checkpoint>.pth --tta [--show [--wait-time <seconds>]] 
 ```
 
 ### Evaluation
 
-The annotations can be compared to the predictions visually, by specifying `--show` after the inference terminal command above. Additionally, a confusion matrix and an FROC curve can be made by running `caries/evaluation/confusion_matrix.py` and `caries/evaluation/froc.py`, respectively.
+The annotations can be compared to the predictions visually, by specifying `--show` and `--wait-time` after the inference terminal command above.
+
+Additionally, a confusion matrix and an FROC curve can be made by running `caries/evaluation/confusion_matrix.py` and `caries/evaluation/froc.py`, respectively.
 
 
 ## Citation

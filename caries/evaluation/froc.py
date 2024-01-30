@@ -167,10 +167,11 @@ def froc(
 
 
 if __name__ == '__main__':
-    template = 'work_dirs/fold{}_mask-rcnn_swin-t/detections.pkl'
+    n_splits = 1
+    
     results = []
-    for i in range(10):
-        with open(template.format(i), 'rb') as f:
+    for split in range(n_splits):
+        with open(f'work_dirs/split{split}/detections.pkl', 'rb') as f:
             result = pickle.load(f)
         
         results.append(result)
@@ -179,10 +180,7 @@ if __name__ == '__main__':
     _, axs = plt.subplots(1, 2, figsize=(12, 5))
 
     cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    # froc(results, color=cycle[0], label='Caries')
     froc(results, color=cycle[1], label='Primary Caries', filter_labels=[0], use_masks=True, ax=axs[0])
     froc(results, color=cycle[2], label='Secondary Caries', filter_labels=[1], use_masks=True, ax=axs[1])
-    # froc(results, color=cycle[1], label='Primary/Secondary Caries', match_labels=True)
-    # froc(results, color=cycle[2], label='Caries Depth', match_attributes=True)
     plt.savefig('froc.png', dpi=500, bbox_inches='tight', pad_inches=0.0)
     plt.show()
